@@ -1,5 +1,5 @@
 # Document-Reference-Converter
-Transform your text documents with interactive reference hover tooltips
+Transform your text documents with interactive reference hover tooltips  
 📚 Document Reference Converter
 This is a simple, single-file HTML tool that converts plain text documents into an interactive web page. It automatically identifies section numbers and their definitions, then links any references to them with hover-over tooltips.
 
