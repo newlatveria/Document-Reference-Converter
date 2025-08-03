@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Reference Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .input-section, .output-section {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-section {
+            border-right: 1px solid #e0e0e0;
+            background: #fafafa;
+        }
+
+        .output-section {
+            background: white;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            border-radius: 2px;
+        }
+
+        textarea {
+            flex: 1;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 20px rgba(79, 172, 254, 0.2);
+        }
+
+        .convert-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .convert-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .convert-btn:active {
+            transform: translateY(0);
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
+        }
+
+        .output-content {
+            flex: 1;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            background: white;
+            overflow-y: auto;
+            font-family: Georgia, serif;
+            line-height: 1.8;
+            color: #333;
+        }
+
+        .reference-link {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            color: #d63384;
+            padding: 2px 6px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: help;
+            position: relative;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(214, 51, 132, 0.2);
+        }
+
+        .reference-link:hover {
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(214, 51, 132, 0.3);
+        }
+
+        .tooltip {
+            position: absolute;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            max-width: 400px;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tooltip.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 20px;
+            width: 12px;
+            height: 12px;
+            background: #2c3e50;
+            transform: rotate(45deg);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .stat-item {
+            background: rgba(79, 172, 254, 0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(79, 172, 254, 0.2);
+        }
+
+        .example-text {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .input-section {
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Document Reference Converter</h1>
+            <p>Transform your text documents with interactive reference hover tooltips</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="input-section">
+                <h2 class="section-title">Input Document</h2>
+                <textarea id="inputText" placeholder="Paste your document here...
+
+Example format:
+4.3
+Scope Definition
+6.1
+Management of change
+7.5
+Information requirements (Definition)
+8.2
+Management of change (Definition)
+8.3
+Core data management (Definition)
+8.4
+License management (Definition)
+8.5
+Security management (Definition)
+8.6
+Other processes (Definition)
+The Statement of Applicability together with the scope definition (4.3) are needed by any internal or external party to understand what is covered by the IT asset management system. NOTE 3	It is possible but not required to specify groupings of processes and process objectives for inclusion or exclusion based on their tier classification as described in Annex B. The Statement of Applicability 6.2.2) documents the decisions as to which are included or excluded.
+Operation including in particular:
+- 8.2 Management of change;
+- 8.3 Core data management;
+- 8.4 License management;
+- 8.5 Security management; and
+- 8.6 Other processes.
+Note that the process objectives for the first four processes are already included in this document, and consequently shall always be included (8.2, 8.3, 8.4, and 8.5).
+Process types are either life cycle or functional.
+For information, and from 7.5 (Information requirements), this process is critical."></textarea>
+                
+                <button class="convert-btn" onclick="convertDocument()">
+                    ✨ Convert to HTML
+                </button>
+                
+                <div class="example-text">
+                    <strong>💡 How it works:</strong> References like (3.16), see 8.2, clause 4.5, section 2.1, according to 7.3, or in 5.4 will become interactive links that show the content when you hover over them.
+                </div>
+            </div>
+            
+            <div class="output-section">
+                <h2 class="section-title">Interactive HTML Output</h2>
+                <div id="outputContent" class="output-content">
+                    <p style="color: #999; font-style: italic; text-align: center; margin-top: 100px;">
+                        Your converted document will appear here with interactive reference links...
+                    </p>
+                </div>
+                
+                <button class="save-btn" id="saveBtn" onclick="saveAsHTML()">
+                    💾 Save as HTML File
+                </button>
+                
+                <div class="stats" id="stats" style="display: none;">
+                    <div class="stat-item">
+                        <strong id="sectionCount">0</strong> sections found
+                    </div>
+                    <div class="stat-item">
+                        <strong id="referenceCount">0</strong> references linked
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <script>
+        let sections = {};
+        let tooltip = document.getElementById('tooltip');
+
+        function convertDocument() {
+            const inputText = document.getElementById('inputText').value;
+            const outputContent = document.getElementById('outputContent');
+            const stats = document.getElementById('stats');
+            const saveBtn = document.getElementById('saveBtn');
+            
+            if (!inputText.trim()) {
+                outputContent.innerHTML = '<p style="color: #ff6b6b; text-align: center; margin-top: 100px;">Please enter some text to convert!</p>';
+                return;
+            }
+
+            sections = {};
+            const lines = inputText.split('\n');
+            let sectionCount = 0;
+            
+            let currentSection = null;
+            let currentDefinition = '';
+            
+            const sectionHeaderRegex = /^(\d+(?:\.\d+)*(?:\s*[a-zA-Z])?|\bAnnex\s+[A-Z])(\s+.*)?$/;
+
+            lines.forEach((line, index) => {
+                const trimmedLine = line.trim();
+                const sectionMatch = trimmedLine.match(sectionHeaderRegex);
+                
+                if (sectionMatch) {
+                    if (currentSection && currentDefinition) {
+                        sections[currentSection] = currentDefinition.trim();
+                        sectionCount++;
+                    }
+                    
+                    currentSection = sectionMatch[1];
+                    currentDefinition = sectionMatch[2] ? sectionMatch[2].trim() + ' ' : '';
+                } else if (currentSection && trimmedLine && !trimmedLine.startsWith('NOTE') && !trimmedLine.startsWith('[SOURCE:')) {
+                    currentDefinition += trimmedLine + ' ';
+                }
+            });
+            
+            if (currentSection && currentDefinition) {
+                sections[currentSection] = currentDefinition.trim();
+                sectionCount++;
+            }
+
+            let htmlOutput = '';
+            let referenceCount = 0;
+            let inDefinition = false;
+            let lastHeader = null;
+            
+            const singleRefPattern = /(\d+(?:\.\d+)*(?:\s*[a-zA-Z])?|Annex\s+[A-Z])/g;
+
+            lines.forEach(line => {
+                const trimmedLine = line.trim();
+                
+                if (!trimmedLine) {
+                    htmlOutput += '<br>\n';
+                    return;
+                }
+                
+                const sectionMatch = trimmedLine.match(sectionHeaderRegex);
+                if (sectionMatch) {
+                    const sectionNum = sectionMatch[1];
+                    const sectionTitle = sectionMatch[2] ? sectionMatch[2].trim() : '';
+
+                    htmlOutput += `<h2 style="color: #4facfe; margin: 30px 0 10px 0; font-size: 1.5rem; border-bottom: 2px solid #4facfe; padding-bottom: 10px;" id="section-${sectionNum}">${sectionNum} ${sectionTitle}</h2>\n`;
+                    lastHeader = sectionNum;
+                    inDefinition = false;
+                    return;
+                }
+
+                if (!inDefinition && lastHeader && !trimmedLine.startsWith('NOTE') && !trimmedLine.startsWith('[SOURCE:')) {
+                    htmlOutput += `<h3 style="color: #333; margin: 15px 0; font-size: 1.3rem; font-weight: bold;">${trimmedLine}</h3>\n`;
+                    inDefinition = true;
+                }
+                
+                let processedLine = trimmedLine;
+                
+                // Logic to handle parenthetical lists first
+                const listPattern = /\(([^)]+)\)/g;
+                processedLine = processedLine.replace(listPattern, (fullMatch, listContent) => {
+                    return `(${listContent.replace(singleRefPattern, (refMatch) => {
+                        const refNum = refMatch.trim();
+                        if (sections[refNum]) {
+                            referenceCount++;
+                            const escapedText = sections[refNum].replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                            return `<span class="reference-link" data-ref="${refNum}" onmouseenter="showTooltip(event, '${refNum}')" onmouseleave="hideTooltip()" title="${escapedText}">${refMatch}</span>`;
+                        }
+                        return refMatch;
+                    })})`;
+                });
+                
+                // New logic for non-parenthetical lists following specific phrases
+                const nonParenListPattern = /\b(determined in)\s+([\d.\s,a-zA-Z]+?)(?:\s+by:)?/gi;
+                processedLine = processedLine.replace(nonParenListPattern, (fullMatch, phrase, listContent) => {
+                    const linkedList = listContent.replace(singleRefPattern, (refMatch) => {
+                        const refNum = refMatch.trim();
+                        if (sections[refNum]) {
+                            referenceCount++;
+                            const escapedText = sections[refNum].replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                            return `<span class="reference-link" data-ref="${refNum}" onmouseenter="showTooltip(event, '${refNum}')" onmouseleave="hideTooltip()" title="${escapedText}">${refMatch}</span>`;
+                        }
+                        return refMatch;
+                    });
+                    return `${phrase} ${linkedList}`;
+                });
+
+                // Other references that don't use parentheses
+                const otherReferencePatterns = [
+                    // New pattern to handle 'from X.Y (Z)'
+                    /\b(from)\s+(\d+(?:\.\d+)*(?:\s*[a-zA-Z])?)(\s+\(.*?\))/gi,
+                    // New pattern to handle lines starting with a hyphen and a number
+                    /^(-)\s*(\d+(?:\.\d+)*(?:\s*[a-zA-Z])?)(.*?;)/g,
+                    // New pattern to handle single number followed by a closing parenthesis
+                    /\b(\d+(?:\.\d+)*(?:\s*[a-zA-Z])?)\)/g, 
+                    // New pattern for Annex references
+                    /\b(Annex\s+[A-Z])\b/g,
+                    /\b(?:see|See)\s+(\d+(?:\.\d+)*(?:\s*[a-zA-Z])?)\b/g,
+                    /\b(?:clause|Clause)\s+(\d+(?:\.\d+)*(?:\s*[a-zA-Z])?)\b/g,
+                    /\b(?:section|Section)\s+(\d+(?:\.\d+)*(?:\s*[a-zA-Z])?)\b/g,
+                    /\bin\s+(\d+(?:\.\d+)*(?:\s*[a-zA-Z])?)\b/g,
+                    /\baccording\s+to\s+(\d+(?:\.\d+)*(?:\s*[a-zA-Z])?)\b/gi
+                ];
+                
+                otherReferencePatterns.forEach(pattern => {
+                    processedLine = processedLine.replace(pattern, (match, ...groups) => {
+                        // The number of captured groups varies, so we need to find the refNum dynamically
+                        const refNum = groups.find(g => g && g.match(/(\d+(?:\.\d+)*(?:\s*[a-zA-Z])?|Annex\s+[A-Z])/));
+                        
+                        if (sections[refNum]) {
+                            referenceCount++;
+                            const escapedText = sections[refNum].replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+                            const linkedNum = `<span class="reference-link" data-ref="${refNum}" onmouseenter="showTooltip(event, '${refNum}')" onmouseleave="hideTooltip()" title="${escapedText}">${refNum}</span>`;
+
+                            // Special handling for patterns with multiple capture groups
+                            if (pattern.source.startsWith('\\b(from)')) {
+                                const [fullMatch, from, num, rest] = groups;
+                                return `${from} ${linkedNum}${rest}`;
+                            } else if (pattern.source.startsWith('^(-)')) {
+                                const [fullMatch, hyphen, num, rest] = groups;
+                                return `${hyphen}${linkedNum}${rest}`;
+                            } else {
+                                // For other patterns, simply replace the original match with the linked number
+                                return match.replace(refNum, linkedNum);
+                            }
+                        }
+                        return match;
+                    });
+                });
+                
+                if (trimmedLine.startsWith('NOTE ') && trimmedLine.includes(' to entry:')) {
+                    htmlOutput += `<p style="margin: 10px 0; padding: 10px; background: rgba(79, 172, 254, 0.1); border-left: 3px solid #4facfe; font-style: italic;"><strong>${processedLine}</strong></p>\n`;
+                } else if (trimmedLine.startsWith('[SOURCE:')) {
+                    htmlOutput += `<p style="margin: 5px 0; color: #666; font-size: 0.9rem; font-style: italic;">${processedLine}</p>\n`;
+                } else {
+                    htmlOutput += `<p style="margin: 10px 0; line-height: 1.6;">${processedLine}</p>\n`;
+                }
+            });
+
+            outputContent.innerHTML = htmlOutput;
+            
+            document.getElementById('sectionCount').textContent = sectionCount;
+            document.getElementById('referenceCount').textContent = referenceCount;
+            stats.style.display = 'flex';
+            
+            if (sectionCount > 0) {
+                saveBtn.style.display = 'block';
+            }
+        }
+
+        function saveAsHTML() {
+            const outputContent = document.getElementById('outputContent').innerHTML;
+            
+            if (!outputContent || outputContent.includes('Your converted document will appear here')) {
+                alert('Please convert a document first before saving!');
+                return;
+            }
+
+            const doc = document.implementation.createHTMLDocument('Document with Interactive References');
+            
+            const viewport = doc.createElement('meta');
+            viewport.name = 'viewport';
+            viewport.content = 'width=device-width, initial-scale=1.0';
+            doc.head.appendChild(viewport);
+            
+            const style = doc.createElement('style');
+            style.textContent = 'body{font-family:Georgia,serif;line-height:1.8;max-width:900px;margin:0 auto;padding:40px 20px;color:#333;background:#fafafa}.document-container{background:white;padding:40px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.1)}.document-title{text-align:center;color:#4facfe;font-size:2.5rem;margin-bottom:40px;border-bottom:3px solid #4facfe;padding-bottom:20px}h2{color:#4facfe!important;margin:30px 0 10px 0!important;font-size:1.5rem!important;border-bottom:2px solid #4facfe!important;padding-bottom:10px!important}h3{color:#333!important;margin:15px 0!important;font-size:1.3rem!important;font-weight:bold!important}p{margin:10px 0!important;line-height:1.6!important}.reference-link{background:linear-gradient(135deg,#ff9a9e 0%,#fecfef 50%,#fecfef 100%);color:#d63384;padding:2px 6px;border-radius:6px;text-decoration:none;font-weight:600;cursor:help;position:relative;transition:all 0.2s ease;border:1px solid rgba(214,51,132,0.2)}.reference-link:hover{background:linear-gradient(135deg,#ff6b6b 0%,#feca57 100%);color:white;transform:scale(1.05);box-shadow:0 4px 12px rgba(214,51,132,0.3)}.tooltip{position:absolute;background:linear-gradient(135deg,#2c3e50 0%,#34495e 100%);color:white;padding:15px;border-radius:12px;font-size:14px;line-height:1.5;max-width:400px;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,0.3);pointer-events:none;opacity:0;transform:translateY(10px);transition:all 0.3s ease;border:1px solid rgba(255,255,255,0.1)}.tooltip.show{opacity:1;transform:translateY(0)}.tooltip::before{content:"";position:absolute;top:-6px;left:20px;width:12px;height:12px;background:#2c3e50;transform:rotate(45deg);border-top:1px solid rgba(255,255,255,0.1);border-left:1px solid rgba(255,255,255,0.1)}@media print{.tooltip{display:none}.reference-link{background:#f0f0f0;color:#333}}';
+            doc.head.appendChild(style);
+            
+            const container = doc.createElement('div');
+            container.className = 'document-container';
+            
+            const title = doc.createElement('h1');
+            title.className = 'document-title';
+            title.textContent = 'Document with Interactive References';
+            container.appendChild(title);
+            
+            container.innerHTML += outputContent;
+            
+            const tooltip = doc.createElement('div');
+            tooltip.id = 'tooltip';
+            tooltip.className = 'tooltip';
+            
+            doc.body.appendChild(container);
+            doc.body.appendChild(tooltip);
+            
+            const script = doc.createElement('script');
+            script.textContent = 'var sections=' + JSON.stringify(sections) + ';var tooltip=document.getElementById("tooltip");function showTooltip(event,refNum){var element=event.target;var sectionText=sections[refNum];if(sectionText){tooltip.textContent=sectionText;tooltip.classList.add("show");var rect=element.getBoundingClientRect();var x=rect.left+window.scrollX;var y=rect.bottom+window.scrollY+5;tooltip.style.left=x+"px";tooltip.style.top=y+"px";setTimeout(function(){var tooltipRect=tooltip.getBoundingClientRect();var newX=x;var newY=y;if(tooltipRect.right>window.innerWidth-10){newX=window.innerWidth-tooltipRect.width-10}if(tooltipRect.bottom>window.innerHeight-10){newY=rect.top+window.scrollY-tooltipRect.height-5}tooltip.style.left=newX+"px";tooltip.style.top=newY+"px"},10)}}function hideTooltip(){tooltip.classList.remove("show")}';
+            doc.body.appendChild(script);
+            
+            const htmlContent = '<!DOCTYPE html>' + doc.documentElement.outerHTML;
+            
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'document-with-references.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showTooltip(event, refNum) {
+            const element = event.target;
+            const sectionText = sections[refNum];
+            if (sectionText) {
+                tooltip.textContent = sectionText;
+                tooltip.classList.add('show');
+                
+                const rect = element.getBoundingClientRect();
+                let x = rect.left + window.scrollX;
+                let y = rect.bottom + window.scrollY + 5;
+                
+                tooltip.style.left = x + 'px';
+                tooltip.style.top = y + 'px';
+                
+                setTimeout(() => {
+                    const tooltipRect = tooltip.getBoundingClientRect();
+                    let newX = x;
+                    let newY = y;
+                    
+                    if (tooltipRect.right > window.innerWidth - 10) {
+                        newX = window.innerWidth - tooltipRect.width - 10;
+                    }
+                    if (tooltipRect.bottom > window.innerHeight - 10) {
+                        newY = rect.top + window.scrollY - tooltipRect.height - 5;
+                    }
+                    
+                    tooltip.style.left = newX + 'px';
+                    tooltip.style.top = newY + 'px';
+                }, 10);
+            }
+        }
+
+        function hideTooltip() {
+            tooltip.classList.remove('show');
+        }
+    </script>
+</body>
+</html>
